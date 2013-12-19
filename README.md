@@ -42,7 +42,6 @@ Dependencies:
 
 - acorn.js
 - underscore
-- promise (server side only)
 
 Demo:
 -----

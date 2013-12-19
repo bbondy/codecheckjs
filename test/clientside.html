@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="../node_modules/underscore/underscore.js"></script>
+<script>
+//shim
+var passCount = 0, failCount = 0;
+
+var tests = [];
+function describe(desc, c) {
+  c();
+}
+
+function it(desc, c) {
+  tests.push({desc: desc, c: c });
+}
+
+this.assert = {};
+assert.ok = function(test) {
+  if (test)
+    passCount++;
+  else
+    failCount++;
+}
+
+var require = function() { };
+
+assert.equal = function(a, b) {
+  if (a === b)
+    passCount++;
+  else
+    failCount++;
+}
+</script>
+<script src="../node_modules/acorn/acorn.js"></script>
+<script src="../codecheck.js"></script>
+<script src="test.js"></script>
+<script>
+  var rec = function() {
+  document.write('<br>PASS: ' + passCount + ', FAIL: ' + failCount + '<br>');
+	  passCount = 0;
+	  failCount = 0;
+    if (tests.length == 0)
+      return;
+     var test = tests[0];
+     tests.splice(0, 1);
+     document.write('Running test: ' + test.desc + '\n');
+     test.c(rec);
+  };
+
+  var test = tests[0];
+  tests.splice(0, 1);
+  document.write('Running test: ' + test.desc + '\n');
+  test.c(rec);
+
+</script>
+</head>
+<body>
+</body>
+</html>

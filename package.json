@@ -1,0 +1,22 @@
+{
+  "name": "codecheckjs",
+  "version": "1.0.0",
+  "description": "Check JavaScript code structure against a set of goals in JavaScript",
+  "main": "codecheck.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/bbondy/codecheckjs"
+  },
+  "author": "Brian R. Bondy",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/bbondy/codecheckjs/issues"
+  },
+  "dependencies": {
+    "mocha": "~1.15.1",
+    "underscore": "~1.5.2"
+  }
+}
