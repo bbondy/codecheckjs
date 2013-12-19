@@ -57,7 +57,7 @@ framework against.
 
 Server side tests are run by using:
 
-```npm test````
+```npm test```
 
 
 Assertions:
