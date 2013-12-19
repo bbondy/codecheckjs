@@ -568,4 +568,69 @@ describe('CodeCheck', function() {
     }, this);
   }); // end it
 
+  it('Tracked identifier names', function(done) {
+    var snippets = [
+      // Match a single variable
+      { assertion: "var $a;", code: "var x;", match: true }
+
+      // Create a variable declaration and use it in an if
+      ,{ assertion: "var $a; if (y) { $a = 3; }", code: "var x; if(y) { x = 3; }", match: true }
+      ,{ assertion: "var $a; if (y) { $a = 3; }", code: "var x; if(y) { z = 3; }", match: false }
+      ,{ assertion: "var $a; if (y) { $a = 3; }", code: "var ABC; if(y) { z = 3; }", match: false }
+
+      // You can use a tracked variable more than you need to
+      ,{ assertion: "var $a = 3; if (y) { $a = 3; }", code: "var x = 3; if(x) { x = 3; x++; }", match: true }
+
+      // Capture on the right hand side of an expression
+      ,{ assertion: "var a = $a; $a = [];", code: "var y = z; z = [];", match: true }
+
+      // Capture on an assignment
+      ,{ assertion: "$a = a; $a = [];", code: "y = z; y = [];", match: true }
+      ,{ assertion: "$a = a; $a = [];", code: "y = z; z = [];", match: false}
+
+      // Capture on the right hand side of an assignment
+      ,{ assertion: "a = $a; $a = [];", code: "y = z; z = [];", match: true }
+      ,{ assertion: "a = $a; $a = [];", code: "y = z; y = [];", match: false }
+
+      // Capture within an if test
+      ,{ assertion: "var x = 0; if($1) { $1 = 3; }", code: "var x = 0; if(c) c = 3;", match: true }
+
+      // Multi char variable name capture
+      ,{ assertion: "var x = 0; if($abcd) { $abcd = 3; }", code: "var x = 0; if(c) c = 3;", match: true }
+      ,{ assertion: "var x = 0; if($) { $a = 3; }", code: "var x = 0; if(abcdef) abcdef = 3;", match: true }
+
+      // Capture within a block
+      ,{ assertion: "var x = 0; if($abcd) { $abcd = 3; }", code: "var x = 0; if(c) c = 3;", match: true }
+      ,{ assertion: "if (x) { $c = 0; } $c = 3;", code: "if(y) hello = 0; hello = 3;", match: true }
+
+      // Use both a capture and a strict name check
+      ,{ assertion: "var $a = __document.__window; alert($a)", code: "var hello = document.window; alert(hello);", match: true }
+      ,{ assertion: "var $a = __document.__window; alert($a)", code: "var hello = document2.window; alert(hello);", match: false }
+      ,{ assertion: "var $a = __document.__window; alert($a)", code: "var hello = document2.window; alert(hello);", match: false }
+      ,{ assertion: "var $a = __document.__window; alert($a)", code: "var hello = document.window; alert(hello2);", match: false }
+
+      // Test capturing 2 vars at once, make sure neither overwrite the other and are tracked differently
+      ,{ assertion: "var $val1 = 3; var $val2 = 2; $val2 = 3;", code: "var x = 3; var y = 2; y = 3;", match: true }
+      ,{ assertion: "var $val1 = 3; var $val2 = 2; $val2 = 3;", code: "var x = 3; var y = 2; x = 3;", match: false }
+      ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; x = 3;", match: true }
+      ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; y = 3;", match: false }
+
+    ];
+    var count = 0;
+    _.each(snippets, function(snippet) {
+      // Create code to test against which contains all the statements
+      var checker = new CodeCheck(); 
+      checker.addAssertion(snippet.assertion);
+      checker.parseSample(snippet.code, function() {
+        count++;
+        assert.equal(checker.assertions.length, 1);
+        assert.ok(snippet.match && checker.assertions[0].hit || 
+                  !snippet.match && !checker.assertions[0].hit);
+        if (count == snippets.length) {
+          done();
+        }
+      });
+    }, this);
+  }); // end it
+
 }); // end describe

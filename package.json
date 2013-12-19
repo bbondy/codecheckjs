@@ -1,6 +1,6 @@
 {
   "name": "codecheckjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Check JavaScript code structure against a set of goals in JavaScript",
   "main": "codecheck.js",
   "scripts": {
@@ -18,5 +18,11 @@
   "dependencies": {
     "mocha": "~1.15.1",
     "underscore": "~1.5.2"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "mocha": "~1.15.1"
   }
 }

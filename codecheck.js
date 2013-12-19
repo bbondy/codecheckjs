@@ -42,8 +42,7 @@ if (typeof window === 'undefined') {
 
 
 function CodeChecker() {
-  this.assertions = [];
-  this.state = { };  
+  this.reset();
 }
 
 CodeChecker.prototype = {
@@ -85,10 +84,12 @@ CodeChecker.prototype = {
   },
 
   /**
-   * Clears out all added assertions
+   * Reset all added assertions, tracked identifiers and state
    */
-  clearAssertions: function() {
+  reset: function() {
     this.assertions = [];
+    this.trackedIdentifiers = {};
+    this.state = {};
   },
 
   /**
@@ -115,7 +116,7 @@ CodeChecker.prototype = {
            !assertion.hit && assertion.blacklist);
       }, this);
     } catch (e) {
-      console.log(e.stack);
+      //console.log(e.stack);
       err = e;;
     }
 
@@ -129,8 +130,9 @@ CodeChecker.prototype = {
    */
   recursiveProperties: ['body', 'cases', 'declarations', 'consequent', 'params',
     'defaults', 'expression', 'left', 'right', 'test', 'args', 'init', 'update',
-    'finalizer', 'block', 'handler', 'guardedHandlers', 'id', 'argument', 'callee',
-    'elements', 'properties', 'key', 'value'],
+    'finalizer', 'block', 'handler', 'guardedHandlers', 'id', 'argument', 
+    'arguments', 'callee', 'elements', 'properties', 'key', 'value', 'object',
+    'property'],
 
   /**
    * Performs a recursive walk on the abstract syntax tree for the assertion
@@ -178,11 +180,27 @@ CodeChecker.prototype = {
         //this._resetSatisfied(assertion.codeAAST);
         isMatchParse = true;
       }
+      // Check for strict identifier matches
       if (nodeAAST.type == 'Identifier' && nodeAAST.name.substring(0, 2) == '__') {
         // Variable names that you want to strictly enforce must
         // start with __, the prefix is ignored, but is otherwise enforced.
         nodeAAST.hit = nodeAAST.hit || nodeAAST.name.substring(2, nodeAAST.name.length) == nodeSAST.name;
         //console.log('detected identifier ' + nodeAAST.name + 'with __ prefix. hit?' + nodeAAST.hit);
+      // Check for tracked identifier matches
+      } else if (nodeAAST.type == 'Identifier' && nodeAAST.name[0] == '$') {
+        var identifier = nodeAAST.name.substring(1, nodeAAST.name.length);
+        var mustMatchTo = this.trackedIdentifiers[identifier];
+
+        // If we don't know what it must match to yet, we're in the capture phase
+        // of the tracked variable
+        if (!mustMatchTo && !nodeSAST.alreadyCaptured) {
+          this.trackedIdentifiers[identifier] = nodeSAST.name;
+          nodeAAST.hit = true;
+          nodeSAST.alreadyCaptured = true;
+        } else if (!nodeSAST.alreadyCaptured) {
+          nodeAAST.hit = nodeAAST.hit || mustMatchTo == nodeSAST.name;
+        }
+      // Otherwise just match all identifiers
       } else {
         nodeAAST.hit = true;
       }

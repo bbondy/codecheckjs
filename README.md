@@ -67,8 +67,41 @@ Each assertion will match as long as it appears somewhere in the sample of
 code.  Even an assertion like `while (x) break;`  will match even if there
 is an if statement before the break on the sample code.
 
+Strict Identifier names:
+------------------------
+
 Identifier names are ignored unless an `__` prefix is added in the assertion.
 If an `__` prefix is found, the identifier name will be matched, but the `__` prefix will be dropped.
+
+Tracked / Captured Identifier tracking:
+---------------------------------------
+
+Strict identifier names are important if you want to make sure a person is typing things like `document.window` but it is not
+ideal for tracking a variable throughout a program.
+
+To do that you should use tracked / captured identifiers in your assertion.
+
+The same idea applies as strict identifier names, but instead of using a `__` prefix, you use a `$` prefix.
+
+You can use any number of tracked identifiers in a single assertion.
+
+The following assertion: 
+
+    var $v1 = 3;
+    var $v2 = 2;
+    $v2 = 3;
+    
+Would match this code:
+
+    var var1 = 3;
+    var var2 = 2;
+    var2 = 3;
+
+Capturing can happen on the first encounter of the $ anywhere to the code sample.
+Even if it is on the right hand side of an assignment, or within a block.
+
+Advanced Skip usage:
+--------------------
 
 An extra property of skip can also be provided for advanced filtering.
 It takes a list of abstract node types and properties to ignore and auto-match.
