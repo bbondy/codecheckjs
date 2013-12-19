@@ -41,11 +41,11 @@ if (typeof window === 'undefined') {
 // This code implements solution #2.
 
 
-function CodeChecker() {
+function CodeCheck() {
   this.reset();
 }
 
-CodeChecker.prototype = {
+CodeCheck.prototype = {
 
   /**
    * Adds an array of assertions and parses their abstract syntax tree.
@@ -297,10 +297,10 @@ CodeChecker.prototype = {
 };
 
 // Export the object prototype, users who use this module should use:
-// CodeChecker = require(code_checker); var codeChecker = new CodeChecker();
+// CodeCheck = require(code_checker); var codeChecker = new CodeCheck();
 if (typeof window === 'undefined') 
-  module.exports = CodeChecker;
+  module.exports = CodeCheck;
 else
-  root.CodeChecker = CodeChecker;
+  root.CodeCheck = CodeCheck;
 
 }).call(this);
