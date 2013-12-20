@@ -182,7 +182,7 @@ CodeCheck.prototype = {
       }
       // Check for strict identifier matches
       if (nodeAAST.type === 'Literal') {
-        nodeAAST.hit = nodeAAST.hit || nodeAAST.raw == nodeSAST.raw;
+        nodeAAST.hit = nodeAAST.hit || nodeAAST.value == nodeSAST.value;
       } else if (nodeAAST.type === 'Identifier' && nodeAAST.name.substring(0, 2) == '__') {
         // Variable names that you want to strictly enforce must
         // start with __, the prefix is ignored, but is otherwise enforced.

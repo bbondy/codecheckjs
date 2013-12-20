@@ -94,6 +94,8 @@ describe('CodeCheck', function() {
       // Literals
       "1;",
       "true;",
+      "'hello'",
+      "\"hello\"",
 
       // ArrayExpression
       "[1,2,3]",
@@ -684,6 +686,11 @@ describe('CodeCheck', function() {
       ,{ assertion: "x = 3;", code: "x = 4;", match: false}
       ,{ assertion: "x = 'abc';", code: "x = 'abc';", match: true }
       ,{ assertion: "x = 'abcd';", code: "x = 'abc';", match: false }
+      ,{ assertion: "x = true;", code: "x = true", match: true }
+      ,{ assertion: "x = true;", code: "x = false", match: false }
+
+      // String literals should match even if different quotes are used
+      ,{ assertion: "x = 'abc';", code: "x = \"abc\";", match: true }
 
       // Expression shouldn't match literals unless they are wildcards
       ,{ assertion: "if (x) { }", code: "if (3) { }", match: false }
