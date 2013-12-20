@@ -100,8 +100,33 @@ Would match this code:
 Capturing can happen on the first encounter of the $ anywhere to the code sample.
 Even if it is on the right hand side of an assignment, or within a block.
 
-Advanced Skip usage:
---------------------
+Context sensitive expression skips:
+-----------------------------------
+
+Lets say you want to skip only in one part of an expression, but not in another. You can do this with skips.
+These skips use identifiers of `$$`. They indicate that any expression or literal can match.
+
+Example this assertion:
+
+    if($$) {
+      x = 3;
+    }
+
+Will match both this:
+
+    if(x) {
+      x = 3;
+    }
+
+
+and  this:
+    if(x && (y < 3)) {
+      x = 3;
+    }
+
+
+Global Skip usage:
+------------------
 
 An extra property of skip can also be provided for advanced filtering.
 It takes a list of abstract node types and properties to ignore and auto-match.

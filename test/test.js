@@ -567,7 +567,6 @@ describe('CodeCheck', function() {
       });
     }, this);
   }); // end it
-
   it('Tracked identifier names', function(done) {
     var snippets = [
       // Match a single variable
@@ -614,7 +613,49 @@ describe('CodeCheck', function() {
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val2 = 3;", code: "var x = 3; var y = 2; x = 3;", match: false }
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; x = 3;", match: true }
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; y = 3;", match: false }
+    ];
+    var count = 0;
+    _.each(snippets, function(snippet) {
+      // Create code to test against which contains all the statements
+      var checker = new CodeCheck(); 
+      checker.addAssertion(snippet.assertion);
+      checker.parseSample(snippet.code, function() {
+        count++;
+        assert.equal(checker.assertions.length, 1);
+        assert.ok(snippet.match && checker.assertions[0].hit || 
+                  !snippet.match && !checker.assertions[0].hit);
+        if (count == snippets.length) {
+          done();
+        }
+      });
+    }, this);
+  }); // end it
 
+  it('Context sensitive expression skips', function(done) {
+    var snippets = [
+      // Match an expression inside an if block
+      { assertion: "if($$) { }", code: "if(x && y) { }", match: true }
+      // Make sure it still checks other improtant things
+      ,{ assertion: "if($$) { x++; }", code: "if(x && y) { }", match: false }
+
+      // Match things in a block, but don't over match!
+      ,{ assertion: "$$; var x = 3;", code: "x++; var x1 = 3;", match: true}
+      ,{ assertion: "$$; var $x = 3;", code: "if(x) {} var z = 3;z=3;", match: true}
+      ,{ assertion: "$$; var x = 3;", code: "x++;", match: false }
+      ,{ assertion: "var x = 3; $$;", code: "x++;", match: false }
+
+      // Match complex expression
+      ,{ assertion: "if($$) { x = 3; }", code: "if(x) { x = 3;}", match: true }
+      ,{ assertion: "if($$) { x = 3; }", code: "if(x && (y < 3)) { x = 3;}", match: true }
+
+      // Match a literal or anything
+      ,{ assertion: "var x = $$; ", code: "var x = 3;", match: true }
+      ,{ assertion: "var x = $$; ", code: "var x = y;", match: true }
+      ,{ assertion: "var x = $$; ", code: "var x = y()", match: true }
+      ,{ assertion: "var x = $$;", code: "var x = 3;", match: true }
+
+      ,{ assertion: "var $$;", code: "var x;", match: true }
+      ,{ assertion: "var $$;", code: "var x = 3;", match: true }
     ];
     var count = 0;
     _.each(snippets, function(snippet) {

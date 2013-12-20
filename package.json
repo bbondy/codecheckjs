@@ -1,6 +1,6 @@
 {
   "name": "codecheckjs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Check JavaScript code structure against a set of goals in JavaScript",
   "main": "codecheck.js",
   "scripts": {
