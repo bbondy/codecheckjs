@@ -73,6 +73,27 @@ Strict Identifier names:
 Identifier names are ignored unless an `__` prefix is added in the assertion.
 If an `__` prefix is found, the identifier name will be matched, but the `__` prefix will be dropped.
 
+Strict literal matching:
+------------------------
+
+Literal values are always matched strictly. If you'd like any match just use $$ instead.
+
+An asseriton of:
+
+    var x = 3;
+
+Will not match:
+
+    var x = 4;
+
+
+But an assertion fo:
+
+    var x = $$;
+
+Would match either 3 or 4.
+
+
 Tracked / Captured Identifiers:
 -------------------------------
 
