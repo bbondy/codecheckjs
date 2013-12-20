@@ -530,6 +530,8 @@ describe('CodeCheck', function() {
       { code: "fn(x) ;", assertion: "fn2(y) ;", match: true },
       { code: "obj = { prop1: 'val1', prop2: 2 };", assertion: "obj = { prop3: 'val1', prop4: 2 };", match: true },
 
+      { code: "Components.util.import('hi');", assertion: "__Components.__util.__import('hi')", match: true },
+
       // Strict names should match
       { code: "function fn() { }", assertion: "function __fn() { }", match: true},
       { code: "var x = 3;", assertion: "var __x = 3;", match: true },
@@ -567,6 +569,7 @@ describe('CodeCheck', function() {
       });
     }, this);
   }); // end it
+
   it('Tracked identifier names', function(done) {
     var snippets = [
       // Match a single variable
@@ -656,6 +659,45 @@ describe('CodeCheck', function() {
 
       ,{ assertion: "var $$;", code: "var x;", match: true }
       ,{ assertion: "var $$;", code: "var x = 3;", match: true }
+    ];
+    var count = 0;
+    _.each(snippets, function(snippet) {
+      // Create code to test against which contains all the statements
+      var checker = new CodeCheck(); 
+      checker.addAssertion(snippet.assertion);
+      checker.parseSample(snippet.code, function() {
+        count++;
+        assert.equal(checker.assertions.length, 1);
+        assert.ok(snippet.match && checker.assertions[0].hit || 
+                  !snippet.match && !checker.assertions[0].hit);
+        if (count == snippets.length) {
+          done();
+        }
+      });
+    }, this);
+  }); // end it
+
+  it('Literals should match exactly unless wildcards are used', function(done) {
+    var snippets = [
+      // Literals should match exactly
+      { assertion: "x = 3;", code: "x = 3;", match: true }
+      ,{ assertion: "x = 3;", code: "x = 4;", match: false}
+      ,{ assertion: "x = 'abc';", code: "x = 'abc';", match: true }
+      ,{ assertion: "x = 'abcd';", code: "x = 'abc';", match: false }
+
+      // Expression shouldn't match literals unless they are wildcards
+      ,{ assertion: "if (x) { }", code: "if (3) { }", match: false }
+      ,{ assertion: "if ($$) { }", code: "if (3) { }", match: true }
+      ,{ assertion: "x = $$;", code: "x = 3;", match: true }
+      ,{ assertion: "x = $$;", code: "x = '3';", match: true }
+
+      // Make sure literal matching doesn't interfere with strict identifier matching
+      ,{ assertion: "__Components.__utils.__import('resource://gre/modules/osfile.jsm')", code: "Components.utils.import('resource://gre/modules/osfile.jsm')", match: true }
+      ,{ assertion: "Components.utils.import('1resource://gre/modules/osfile.jsm')", code: "Components.utils.import('resource://gre/modules/osfile.jsm')", match: false }
+
+      // Make sure literals work with tracked identifiers
+      ,{ assertion: "$x = $$; $x = 3;", code: "x1 = '3'; x1 = 3", match: true }
+      ,{ assertion: "$x = $$; $x = 3;", code: "x1 = '3'; x = 3", match: false }
     ];
     var count = 0;
     _.each(snippets, function(snippet) {

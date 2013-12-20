@@ -181,7 +181,9 @@ CodeCheck.prototype = {
         isMatchParse = true;
       }
       // Check for strict identifier matches
-      if (nodeAAST.type == 'Identifier' && nodeAAST.name.substring(0, 2) == '__') {
+      if (nodeAAST.type === 'Literal') {
+        nodeAAST.hit = nodeAAST.hit || nodeAAST.raw == nodeSAST.raw;
+      } else if (nodeAAST.type === 'Identifier' && nodeAAST.name.substring(0, 2) == '__') {
         // Variable names that you want to strictly enforce must
         // start with __, the prefix is ignored, but is otherwise enforced.
         nodeAAST.hit = nodeAAST.hit || nodeAAST.name.substring(2, nodeAAST.name.length) == nodeSAST.name;
@@ -190,7 +192,7 @@ CodeCheck.prototype = {
         this._setSatisfied(nodeAAST, true);
         return;
       // Check for tracked identifier matches
-      } else if (nodeAAST.type == 'Identifier' && nodeAAST.name[0] == '$') {
+      } else if (nodeAAST.type === 'Identifier' && nodeAAST.name[0] === '$') {
         var identifier = nodeAAST.name.substring(1, nodeAAST.name.length);
         var mustMatchTo = this.trackedIdentifiers[identifier];
 
