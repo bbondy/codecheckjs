@@ -28,7 +28,7 @@ The API has 2 important members which should be used after a parseSample call:
 Example Usage of the API:
 -------------------------
 
-    var checker = new CodeChecker();
+    var checker = new CodeCheck();
     checker.addAssertion("x = 3;");
     checker.addAssertion("x++", { blacklist: true, otherProps: "hi" });
     checker.parseSample("if (x) { x = 3; }", function(err) {

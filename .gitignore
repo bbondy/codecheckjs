@@ -1,3 +1,4 @@
+out.txt
 lib-cov
 *.seed
 *.log
@@ -13,3 +14,25 @@ results
 
 npm-debug.log
 node_modules
+
+#OSX files
+.DS_Store
+
+#Redis DB
+dump.rdb
+
+#Use stylus for css
+main.css
+
+#Editor
+*.swp
+*.swo
+*.swn
+*.*~
+
+#Binaries
+*.exe
+
+
+#Project config file with secrets in it
+data/config.json
