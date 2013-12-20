@@ -73,8 +73,8 @@ Strict Identifier names:
 Identifier names are ignored unless an `__` prefix is added in the assertion.
 If an `__` prefix is found, the identifier name will be matched, but the `__` prefix will be dropped.
 
-Tracked / Captured Identifier tracking:
----------------------------------------
+Tracked / Captured Identifiers:
+-------------------------------
 
 Strict identifier names are important if you want to make sure a person is typing things like `document.window` but it is not
 ideal for tracking a variable throughout a program.
@@ -118,8 +118,8 @@ Will match both this:
       x = 3;
     }
 
-
 and  this:
+
     if(x && (y < 3)) {
       x = 3;
     }
