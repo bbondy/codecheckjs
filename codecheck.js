@@ -90,6 +90,7 @@ CodeCheck.prototype = {
     this.assertions = [];
     this.trackedIdentifiers = {};
     this.state = {};
+    this.capturedSASTNodes = [];
   },
 
   /**
@@ -108,6 +109,9 @@ CodeCheck.prototype = {
 
       // Walk through the sampleCodeTree for each assertion we have
       _.each(this.assertions, function(assertion) {
+        // We want this reset on each iteration because we re-capture identifiers on
+        // each assertion tree walk from scratch.
+        this.capturedSASTNodes = [];
 //        console.log(prettyjson.render(assertion.codeAAST));
         this.processNode(assertion, assertion.codeAAST, this.sampleCodeTree, false, 0, 0, 'loc1');
         assertion.hit = this._isAssertionCompletelySatisfied(assertion.codeAAST);
@@ -175,11 +179,8 @@ CodeCheck.prototype = {
     // Check if we want to set isMatchParse
     if (nodeAAST.type == nodeSAST.type || this._isWildcardMatchNode(nodeAAST)) {
       //console.log('HIT THE NODE TYPE: ' + nodeAAST.type);
-      // First time match parse, let's reset the nodes!
-      if (!isMatchParse) {
-        //this._setSatisfied(assertion.codeAAST);
-        isMatchParse = true;
-      }
+      isMatchParse = true;
+
       // Check for strict identifier matches
       if (nodeAAST.type === 'Literal') {
         nodeAAST.hit = nodeAAST.hit || nodeAAST.value == nodeSAST.value;
@@ -189,7 +190,7 @@ CodeCheck.prototype = {
         nodeAAST.hit = nodeAAST.hit || nodeAAST.name.substring(2, nodeAAST.name.length) == nodeSAST.name;
         //console.log('detected identifier ' + nodeAAST.name + 'with __ prefix. hit?' + nodeAAST.hit);
       } else if (this._isWildcardMatchNode(nodeAAST)) {
-        this._setSatisfied(nodeAAST, true);
+        this._setPropRecursively(nodeAAST, 'hit', true);
         return;
       // Check for tracked identifier matches
       } else if (nodeAAST.type === 'Identifier' && nodeAAST.name[0] === '$') {
@@ -198,11 +199,12 @@ CodeCheck.prototype = {
 
         // If we don't know what it must match to yet, we're in the capture phase
         // of the tracked variable
-        if (!mustMatchTo && !nodeSAST.alreadyCaptured) {
+        var alreadyCapturedSASTNode = _.contains(this.capturedSASTNodes, nodeSAST);
+        if (!mustMatchTo && !alreadyCapturedSASTNode) {
           this.trackedIdentifiers[identifier] = nodeSAST.name;
           nodeAAST.hit = true;
-          nodeSAST.alreadyCaptured = true;
-        } else if (!nodeSAST.alreadyCaptured) {
+          this.capturedSASTNodes.push(nodeSAST);
+        } else if (!alreadyCapturedSASTNode) {
           nodeAAST.hit = nodeAAST.hit || mustMatchTo == nodeSAST.name;
         }
       // Otherwise just match all identifiers
@@ -221,7 +223,7 @@ CodeCheck.prototype = {
           if (assertion.skip) {
             _.each(assertion.skip, function (skipObj) {
               if (skipObj.type == nodeAAST.type && prop == skipObj.prop) {
-                this._setSatisfied(nodeAAST[prop], true);
+                this._setPropRecursively(nodeAAST[prop], 'hit', true);
               }
             }, this);
           }
@@ -279,15 +281,15 @@ CodeCheck.prototype = {
    *
    * @param The starting node to recurse on
    */
-  _setSatisfied: function(node, val) {
+  _setPropRecursively: function(node, prop, val) {
     if (_.isArray(node)) {
       _.each(node, function(n) {
-        this._setSatisfied(n, val);
+        this._setPropRecursively(n, prop, val);
       }, this);
       return;
     }
 
-    node.hit = val;
+    node[prop] = val;
     _.each(this.recursiveProperties, function(prop) {
       if (node[prop] && _.isArray(node[prop])) {
         _.each(node[prop], function(childSASTNode) {
@@ -308,3 +310,4 @@ else
   root.CodeCheck = CodeCheck;
 
 }).call(this);
+

@@ -101,7 +101,10 @@ describe('CodeCheck', function() {
       "[1,2,3]",
 
       //ObjectExpression
-      "obj = { prop1: 'val1', prop2: 2 };"
+      "obj = { prop1: 'val1', prop2: 2 };",
+
+      // Statements inside callbacks
+      "obj.c(function(x) { y = 3.0; });"
     ];
     
     var count = 0;
@@ -299,27 +302,40 @@ describe('CodeCheck', function() {
   it('more than one assertion should be able to be checked on the same sample code with 1 instance of checker only using addAssertions API. Extra properties should be carried forward', function(done) {
     var assertions = [
       // Has an increment
-      { code: "x++;", someExtraProp: true },
+      { code: "x++;", shouldMatch: true },
+
+      // Has var x = 3
+      { code: "var x = 3;", shouldMatch: true },
 
       // Has an increment
-      { code: "x++;", someExtraProp: true  },
+      { code: "x++;", shouldMatch: true  },
 
       // Has an empty statement
-      { code: ";", someExtraProp: true },
+      { code: ";", shouldMatch: true },
 
       // Has an if with an assignment in it
-      { code: "if (x) { x = 3; }", someExtraProp: true }
+      { code: "if (x) { x = 3; }", shouldMatch: true },
+
+      // More than one capture for the same snippet should match
+      { code: "if ($x) { $x = 3; }", shouldMatch: true },
+      { code: "if ($y) { $y = 3; }", shouldMatch: true },
+
+      // Just because old assertions match doesn't mean new assertions match
+      { code: "while(1) {}", shouldMatch: false },
+      { code: "if(x) { var x = 3;}", shouldMatch: false }
+
     ];
     var count = 0;
     var checker = new CodeCheck(); 
     checker.addAssertions(assertions);
 
-    checker.parseSample("if (x) { x = 3; x++;; }", function() {
+    checker.parseSample("var x = 3; if (x) { x = 3; x++;; }", function() {
       count++;
       assert.equal(checker.assertions.length, assertions.length);
       _.each(checker.assertions, function(assertion) {
-        assert.ok(assertion.hit);
-        assert.ok(assertion.someExtraProp);
+        assert.ok(assertion.hit && assertion.shouldMatch || 
+                  !assertion.hit && !assertion.shouldMatch);
+        assert.ok(typeof assertion.shouldMatch !== 'undefined');
       });
       done();
     });
@@ -618,6 +634,10 @@ describe('CodeCheck', function() {
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val2 = 3;", code: "var x = 3; var y = 2; x = 3;", match: false }
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; x = 3;", match: true }
       ,{ assertion: "var $val1 = 3; var $val2 = 2; $val1 = 3;", code: "var x = 3; var y = 2; y = 3;", match: false }
+
+      // Complext match with lots of captures
+      ,{ assertion: "var $promise = OS.File.read('topsecret.txt'); $promise.__then(function($data) { var $textDecoder = new __TextDecoder(); $textDecoder.decode($data) });", code: "Components.utils.import('resource://gre/modules/osfile.jsm'); var p = OS.File.read('topsecret.txt'); p.then(function(dat){ var t = new TextDecoder(); t.decode(dat); });", match: true }
+      ,{ assertion: "var $promise = OS.File.read('topsecret.txt'); $promise.__then(function($data) { var $textDecoder = new __TextDecoder(); $textDecoder.decode($data) });", code: "Components.utils.import('resource://gre/modules/osfile.jsm'); var p = OS.File.read('topsecret.txt'); p.then(function(dat){ var t = new TextDecoder(); t.decode(data); });", match: false }
     ];
     var count = 0;
     _.each(snippets, function(snippet) {
