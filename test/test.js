@@ -9,7 +9,6 @@ global._ = require("underscore");
 }
 
 describe('CodeCheck', function() {
-
   it('supports basic exact matches for the JS language', function(done) {
     var samples = [
       // Function
@@ -638,6 +637,10 @@ describe('CodeCheck', function() {
       // Complext match with lots of captures
       ,{ assertion: "var $promise = OS.File.read('topsecret.txt'); $promise.__then(function($data) { var $textDecoder = new __TextDecoder(); $textDecoder.decode($data) });", code: "Components.utils.import('resource://gre/modules/osfile.jsm'); var p = OS.File.read('topsecret.txt'); p.then(function(dat){ var t = new TextDecoder(); t.decode(dat); });", match: true }
       ,{ assertion: "var $promise = OS.File.read('topsecret.txt'); $promise.__then(function($data) { var $textDecoder = new __TextDecoder(); $textDecoder.decode($data) });", code: "Components.utils.import('resource://gre/modules/osfile.jsm'); var p = OS.File.read('topsecret.txt'); p.then(function(dat){ var t = new TextDecoder(); t.decode(data); });", match: false }
+
+      // A captured var should be enforced for subsequent non nested statements
+      , { assertion: "var $p1 = 3; $p1 = 4; $p1 = 5;", code: "var x = 3; x = 4; x = 5;", match: true }
+      , { assertion: "var $p1 = 3; $p1 = 4; $p1 = 5;", code: "var x = 3; x = 4; y = 5;", match: false }
     ];
     var count = 0;
     _.each(snippets, function(snippet) {
